@@ -1,5 +1,7 @@
 use num_traits::{One, Zero};
 
+// TODO consider adding other ops that return Option<UnitInterval<T>>
+
 /// A value guaranteed to be in the range `0.0..=1.0`
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct UnitInterval<T>(T);
@@ -111,6 +113,12 @@ macro_rules! impl_traits {
                 value.0
             }
         }
+
+        impl rand::distributions::Distribution<UnitInterval<$ty>> for rand::distributions::Standard {
+            fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UnitInterval<$ty> {
+                UnitInterval(rng.gen())
+            }
+        }
     };
     ($($ty:ty),*) => {
         $(
@@ -140,5 +148,15 @@ mod tests {
         assert_eq!(UnitInterval(1.0 - 0.9), !UnitInterval(0.9));
         assert_eq!(UnitInterval(1.0 - 0.1), !UnitInterval(0.1));
         assert_eq!(UnitInterval(0.0), !UnitInterval(1.0));
+    }
+
+    #[test]
+    fn rand_distribution() {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        for _ in 0..1000 {
+            let x = rng.gen::<UnitInterval<f32>>().get();
+            assert!(UnitInterval::new(x).is_some());
+        }
     }
 }
