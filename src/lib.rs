@@ -116,7 +116,7 @@ macro_rules! impl_traits {
 
         impl rand::distributions::Distribution<UnitInterval<$ty>> for rand::distributions::Standard {
             fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UnitInterval<$ty> {
-                UnitInterval(rng.gen())
+                UnitInterval(rng.gen_range(0.0..=1.0))
             }
         }
     };
@@ -157,6 +157,19 @@ mod tests {
         for _ in 0..1000 {
             let x = rng.gen::<UnitInterval<f32>>().get();
             assert!(UnitInterval::new(x).is_some());
+        }
+    }
+
+    #[test]
+    #[cfg(not(debug_assertions))]
+    fn rand_generates_1() {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        loop {
+            let x = rng.gen::<UnitInterval<f32>>();
+            if x == 1.0 {
+                return;
+            }
         }
     }
 }
